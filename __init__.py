@@ -30,6 +30,8 @@ if "bpy" in locals():
         importlib.reload(import_cgp)
     if "export_cgp" in locals():
         importlib.reload(export_cgp)
+    if "utils" in locals():
+        importlib.reload(utils)
 
 # Imports
 import bpy
@@ -148,7 +150,7 @@ class CGP_EDITOR_PT_Pillar(bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
-        pillar = context.object
+        pillar = context.active_object
 
         row = layout.row(align=True, heading="")
         row.prop(pillar, "prefab_type")
@@ -174,7 +176,7 @@ def register():
         ('s', "Stairs", ""),
         ('H', "Hideous Mass","Hideous Mass spawn point")
         ),
-        default='0', update=utils.on_enum_color)
+        default='0', update=utils.prefab_update)
     bpy.types.Object.is_pillar = BoolProperty(name="Is Pillar")
 
     for cls in classes:

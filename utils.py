@@ -15,8 +15,8 @@
 
 import bpy
 
-def on_enum_color(self, context):
-    update_color(context.active_object, context.active_object.prefab_type)
+def prefab_update(self, context):
+    update_color(self, self.prefab_type)
     return None
 
 def update_color(obj, prefab):
