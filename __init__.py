@@ -116,6 +116,24 @@ class GenerateCGP(bpy.types.Operator):
             blank_grid.append(row_storage)
         return import_cgp.build_grid(bpy.context, blank_grid, blank_grid, "Blank Pattern")
 
+class UpdateAllPillars(bpy.types.Operator):
+    """Update all pillars' prefabs"""
+    bl_idname = "cgp_editor.update_pillars"
+    bl_label = "Update Selected Pillars"
+    bl_options = {'UNDO'}
+    bl_context = ""
+
+    @classmethod
+    def poll(cls, context):
+        filtered_objects = list(filter(lambda x: x.is_pillar, context.selected_objects))
+        return len(filtered_objects) > 1
+
+    def execute(self, context):
+        for obj in context.selected_objects:
+            if obj.is_pillar:
+                obj.prefab_type = context.active_object.prefab_type
+        return {"FINISHED"}
+
 class CGP_EDITOR_PT_Mesh(bpy.types.Panel):
     bl_label = "Mesh"
     bl_category = "UltraPattern"
@@ -152,13 +170,17 @@ class CGP_EDITOR_PT_Pillar(bpy.types.Panel):
         layout = self.layout
         pillar = context.active_object
 
-        row = layout.row(align=True, heading="")
+        row = layout.row()
         row.prop(pillar, "prefab_type")
+        
+        row = layout.row()
+        row.operator(UpdateAllPillars.bl_idname)
 
 classes = (
     ImportCGP,
     ExportCGP,
     GenerateCGP,
+    UpdateAllPillars,
     CGP_EDITOR_PT_Mesh,
     CGP_EDITOR_PT_Pillar
 )
