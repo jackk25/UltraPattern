@@ -16,6 +16,12 @@
 import bpy
 import os
 from mathutils import Vector
+
+if "bpy" in locals():
+    import importlib
+    if "utils" in locals():
+        importlib.reload(utils)
+
 from . import utils
 
 def build_grid(context, height_map, prefab_map, name):
@@ -51,11 +57,10 @@ def build_grid(context, height_map, prefab_map, name):
             pillar_copy = original_pillar.copy()
 
             pillar_copy.location += position_offset
-
+            collection.objects.link(pillar_copy)
+            
             pillar_copy.is_pillar = True
             pillar_copy.prefab_type = str(prefab)
-            utils.update_color(pillar_copy, str(prefab))
-            collection.objects.link(pillar_copy)
 
     bpy.data.objects.remove(original_pillar)
     return {'FINISHED'}
