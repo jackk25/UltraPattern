@@ -31,9 +31,3 @@ Congrats, you've just installed UltraPattern! 🎉
 * To edit a pillar's prefab, click on it, and you will see a new panel named "Pillar" appear
 * Use the menu to edit the pillar's prefab
 * To export, select the pattern's collection and click *Export CGP*
-
-## Notes
-* UltraPattern is currently in a **pre-release** state, so certain features, such as:
-  * Mass-select prefab editing
-  * Material generation  
-are currently **unavailable**, but will be coming **soon**

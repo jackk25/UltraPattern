@@ -15,6 +15,8 @@
 
 import bpy
 import os
+import bmesh
+import json
 from mathutils import Vector
 
 if "bpy" in locals():
@@ -46,6 +48,8 @@ def build_grid(context, height_map, prefab_map, name):
     #Locking the object position
     original_pillar.lock_location[0] = True
     original_pillar.lock_location[1] = True
+
+    fix_uvs(original_pillar.data)
 
     for x, row in enumerate(height_map):
         position_offset = Vector((x * BASE_PILLAR_SIZE, 0, 0))
@@ -98,6 +102,29 @@ def parse_object_map(object_map):
         parsed_map.append(row_storage)
     parsed_map.pop(0)
     return parsed_map
+
+def fix_uvs(mesh_data):
+    bm = bmesh.new()
+    bm.from_mesh(mesh_data)
+
+    uv_layer = bm.loops.layers.uv.active
+
+    loaded_uvs = []
+
+    with open(r"resources\cube.json",'r') as f:
+        loaded_uvs = json.load(f)
+    
+    for index, face in enumerate(bm.faces):
+        face_uvs = loaded_uvs[index]
+        for loop_index, loop in enumerate(face.loops):
+            uv = loop[uv_layer].uv
+            loop_uv = face_uvs[loop_index]
+            uv.x = loop_uv[0]
+            uv.y = loop_uv[1]
+    
+    bm.to_mesh(mesh_data)
+    mesh_data.update()
+    bm.free()
 
 def load(operator, context, filepath=""):
     with open(filepath, 'r', encoding='utf-8') as f:
