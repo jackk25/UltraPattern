@@ -111,7 +111,10 @@ def fix_uvs(mesh_data):
 
     loaded_uvs = []
 
-    with open(r"resources\cube.json",'r') as f:
+    current_file_dir = os.path.dirname(__file__)
+    uv_filepath = os.path.join(current_file_dir, "resources", "cube.json")
+
+    with open(uv_filepath,'r') as f:
         loaded_uvs = json.load(f)
     
     for index, face in enumerate(bm.faces):
