@@ -32,8 +32,6 @@ if "bpy" in locals():
         importlib.reload(export_cgp)
     if "utils" in locals():
         importlib.reload(utils)
-    if "generate_material" in locals():
-        importlib.reload(generate_material)
 
 # Imports
 import bpy
@@ -65,7 +63,7 @@ class ImportCGP(bpy.types.Operator, ImportHelper):
 
     def execute(self, context):
         from . import import_cgp
-        return import_cgp.load(self, context, self.filepath)
+        return import_cgp.load(context, self.filepath)
 
 class ExportCGP(bpy.types.Operator, ExportHelper):
     """Write a Cyber Grind Pattern file"""
@@ -110,9 +108,9 @@ class GenerateCGP(bpy.types.Operator):
         blank_grid = []
         # This could be done with list comprehension
         # But I think the readability is better here
-        for x in range(16):
+        for _ in range(16):
             row_storage = []
-            for y in range(16):
+            for _ in range(16):
                 row_storage.append(0)
             blank_grid.append(row_storage)
         return import_cgp.build_grid(bpy.context, blank_grid, blank_grid, "Blank Pattern")
@@ -138,7 +136,7 @@ class ChangeShadingType(bpy.types.Operator):
     bl_context = "VIEW_3D"
 
     def execute(self, context):
-        bpy.context.space_data.shading.color_type = 'OBJECT'
+        context.space_data.shading.color_type = 'OBJECT'
         return {'FINISHED'}
 
 class GenerateMaterial(bpy.types.Operator, ImportHelper):
@@ -162,8 +160,7 @@ class GenerateMaterial(bpy.types.Operator, ImportHelper):
             return False
 
     def execute(self, context):
-        from . import generate_material
-        return generate_material.generate_material(context.active_object, self.filepath)
+        return utils.generate_material(context.active_object, self.filepath)
 
 class CGP_EDITOR_PT_Mesh(bpy.types.Panel):
     bl_label = "Mesh"
@@ -185,7 +182,7 @@ class CGP_EDITOR_PT_Mesh(bpy.types.Panel):
         row.operator(GenerateMaterial.bl_idname, icon="SHADING_TEXTURE")
 
         row = layout.row()
-        if bpy.context.space_data.shading.color_type != 'OBJECT':
+        if context.space_data.shading.color_type != 'OBJECT':
             row.label(text="WARNING: Object Shading is NOT enabled, prefab colors will NOT work", icon="ERROR")
             row.operator(ChangeShadingType.bl_idname)
 

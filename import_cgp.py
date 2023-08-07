@@ -26,16 +26,12 @@ if "bpy" in locals():
 
 from . import utils
 
-def build_grid(context, height_map, prefab_map, name):
-    PILLAR_VERTICAL_SCALE = 10
-    BASE_PILLAR_SIZE = 2
-
-    #Create the collection for our pillars, and register it as a pattern
-    collection = bpy.data.collections.new(name)
-    collection.is_pattern = True
-    context.collection.children.link(collection)
-
-    bpy.ops.mesh.primitive_cube_add(size=BASE_PILLAR_SIZE, location=Vector((0,0, -PILLAR_VERTICAL_SCALE)), scale=Vector((1, 1, PILLAR_VERTICAL_SCALE)))
+def make_base_pillar(context, BASE_PILLAR_SIZE, PILLAR_VERTICAL_SCALE):
+    bpy.ops.mesh.primitive_cube_add(
+        size=BASE_PILLAR_SIZE, 
+        location=Vector((0,0, -PILLAR_VERTICAL_SCALE)), 
+        scale=Vector((1, 1, PILLAR_VERTICAL_SCALE))
+    )
 
     # Changing the pillar origin
     old_cursor_position = context.scene.cursor.location
@@ -50,6 +46,19 @@ def build_grid(context, height_map, prefab_map, name):
     original_pillar.lock_location[1] = True
 
     fix_uvs(original_pillar.data)
+
+    return original_pillar
+
+def build_grid(context, height_map, prefab_map, name):
+    PILLAR_VERTICAL_SCALE = 10
+    BASE_PILLAR_SIZE = 2
+
+    #Create the collection for our pillars, and register it as a pattern
+    collection = bpy.data.collections.new(name)
+    collection.is_pattern = True
+    context.collection.children.link(collection)
+
+    original_pillar = make_base_pillar(context, BASE_PILLAR_SIZE, PILLAR_VERTICAL_SCALE)
 
     for x, row in enumerate(height_map):
         position_offset = Vector((x * BASE_PILLAR_SIZE, 0, 0))
@@ -73,34 +82,31 @@ def parse_height_map(height_map):
     parsed_map = []
     for row in height_map:
         row_storage = []
-        temp_storage = ""
+        block_storage = ""
         in_block = False
-        row = row.replace('\n', "")
-        for x, char in enumerate(row):
+        for char in row:
             if char == '(':
                 in_block = True
                 continue
             if char == ')':
                 in_block = False
-                row_storage.append(int(temp_storage))
-                temp_storage = ""
+                row_storage.append(int(block_storage))
+                block_storage = ""
                 continue
             if in_block == False:
                 row_storage.append(int(char))
             if in_block:
-                temp_storage += char
+                block_storage += char
         parsed_map.append(row_storage)
     return parsed_map
 
 def parse_object_map(object_map):
     parsed_map = []
-    for x in object_map:
-        x = x.replace('\n', '')
+    for row in object_map:
         row_storage = []
-        for y in x:
-            row_storage.append(y)
+        for col in row:
+            row_storage.append(col)
         parsed_map.append(row_storage)
-    parsed_map.pop(0)
     return parsed_map
 
 def fix_uvs(mesh_data):
@@ -129,12 +135,12 @@ def fix_uvs(mesh_data):
     mesh_data.update()
     bm.free()
 
-def load(operator, context, filepath=""):
+def load(context, filepath=""):
     with open(filepath, 'r', encoding='utf-8') as f:
-        data = f.readlines()
+        data = f.read().splitlines()
 
         height_map = data[:16]
-        object_map = data[16:]
+        object_map = data[17:]
 
         height_map = parse_height_map(height_map)
         object_map = parse_object_map(object_map)
