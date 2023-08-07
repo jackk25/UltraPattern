@@ -27,7 +27,10 @@ Congrats, you've just installed UltraPattern! 🎉
 ## Usage
 * In the 3D View, press N to open the sidebar
 * Click on the tab labled "UltraPattern"
-* To get started, either import a pattern with *Import CGP* or create a blank pattern with *Create Blank Pattern*
+* To get started, either import a pattern with *Import CGP* or create a blank pattern with *Create Blank Pattern*  
+  * Patterns can be found in `Cybergrind/Patterns/` in your game folder
 * To edit a pillar's prefab, click on it, and you will see a new panel named "Pillar" appear
-* Use the menu to edit the pillar's prefab
+  * If you want to update multiple pillars at the same time, make sure to click *Update All Selected Pillars*  
+* To generate a material for rendering, click *Generate Material*, browse to the texture, and confirm it  
+  * Cyber Grind textures are found in `Cybergrind/Textures/` in your game folder
 * To export, select the pattern's collection and click *Export CGP*
