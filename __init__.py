@@ -32,6 +32,8 @@ if "bpy" in locals():
         importlib.reload(export_cgp)
     if "utils" in locals():
         importlib.reload(utils)
+    if "generate_material" in locals():
+        importlib.reload(generate_material)
 
 # Imports
 import bpy
@@ -47,7 +49,6 @@ from bpy_extras.io_utils import (
     ExportHelper
     )
 
-from mathutils import Vector
 from . import utils
 
 class ImportCGP(bpy.types.Operator, ImportHelper):
@@ -119,20 +120,50 @@ class GenerateCGP(bpy.types.Operator):
 class UpdateAllPillars(bpy.types.Operator):
     """Update all pillars' prefabs"""
     bl_idname = "cgp_editor.update_pillars"
-    bl_label = "Update Selected Pillars"
+    bl_label = "Update All Selected Pillars"
     bl_options = {'UNDO'}
     bl_context = ""
-
-    @classmethod
-    def poll(cls, context):
-        filtered_objects = list(filter(lambda x: x.is_pillar, context.selected_objects))
-        return len(filtered_objects) > 1
 
     def execute(self, context):
         for obj in context.selected_objects:
             if obj.is_pillar:
                 obj.prefab_type = context.active_object.prefab_type
         return {"FINISHED"}
+    
+class ChangeShadingType(bpy.types.Operator):
+    """Change the color shading type to Object"""
+    bl_idname = "cgp_editor.object_shading"
+    bl_label = "Enable Object Shading"
+    bl_options = {'UNDO'}
+    bl_context = "VIEW_3D"
+
+    def execute(self, context):
+        bpy.context.space_data.shading.color_type = 'OBJECT'
+        return {'FINISHED'}
+
+class GenerateMaterial(bpy.types.Operator, ImportHelper):
+    """Generate the material for the mesh"""
+    bl_idname = "cgp_editor.generate_material"
+    bl_label = "Generate Material"
+    bl_options = {'UNDO'}
+
+    filename_ext = ".png"
+    filter_glob: StringProperty(
+        default="*.png",
+        options={'HIDDEN'}
+    )
+
+    @classmethod
+    def poll(cls, context):
+        # Error checking
+        try:
+            return context.active_object.is_pillar
+        except AttributeError:
+            return False
+
+    def execute(self, context):
+        from . import generate_material
+        return generate_material.generate_material(context.active_object, self.filepath)
 
 class CGP_EDITOR_PT_Mesh(bpy.types.Panel):
     bl_label = "Mesh"
@@ -144,11 +175,19 @@ class CGP_EDITOR_PT_Mesh(bpy.types.Panel):
         layout = self.layout
 
         row = layout.row(align=True)
-        row.operator(ImportCGP.bl_idname)
-        row.operator(ExportCGP.bl_idname)
+        row.operator(ImportCGP.bl_idname, icon="IMPORT")
+        row.operator(ExportCGP.bl_idname, icon="EXPORT")
 
         row = layout.row()
-        row.operator(GenerateCGP.bl_idname)
+        row.operator(GenerateCGP.bl_idname, icon="FILE_VOLUME")
+
+        row = layout.row()
+        row.operator(GenerateMaterial.bl_idname, icon="SHADING_TEXTURE")
+
+        row = layout.row()
+        if bpy.context.space_data.shading.color_type != 'OBJECT':
+            row.label(text="WARNING: Object Shading is NOT enabled, prefab colors will NOT work", icon="ERROR")
+            row.operator(ChangeShadingType.bl_idname)
 
 class CGP_EDITOR_PT_Pillar(bpy.types.Panel):
     bl_label = "Pillar"
@@ -173,14 +212,18 @@ class CGP_EDITOR_PT_Pillar(bpy.types.Panel):
         row = layout.row()
         row.prop(pillar, "prefab_type")
         
-        row = layout.row()
-        row.operator(UpdateAllPillars.bl_idname)
+        filtered_objects = list(filter(lambda x: x.is_pillar, context.selected_objects))
+        if len(filtered_objects) > 1:
+            row = layout.row()
+            row.operator(UpdateAllPillars.bl_idname, icon="FILE_REFRESH")
 
 classes = (
     ImportCGP,
     ExportCGP,
     GenerateCGP,
     UpdateAllPillars,
+    ChangeShadingType,
+    GenerateMaterial,
     CGP_EDITOR_PT_Mesh,
     CGP_EDITOR_PT_Pillar
 )
